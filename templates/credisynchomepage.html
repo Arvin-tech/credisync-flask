@@ -10,7 +10,8 @@
      <!--<h1>Credisync body</h1>-->
      <div class="content">
         <h1>Loan Applications</h1>
-    
+        
+        <!--loan application entry-->
         <form action="" method="POST">
           <label for="id">ID:</label>
           <input type="text" id="id" name="id" required><br>
@@ -37,7 +38,7 @@
                 <td>{{ application.id }}</td>
                 <td>{{ application.salary }}</td>
                 <td>{{ application.loan_amount }}</td>
-                <td>
+                <td> 
                   <a href="{{ url_for('approve_application', application_id=application.id) }}">Approve</a>
                   <a href="{{ url_for('reject_application', application_id=application.id) }}">Reject</a>
                   <a href="{{ url_for('reject_application', application_id=application.id) }}">Evaluate</a>
