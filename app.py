@@ -1,94 +1,109 @@
-from flask import Flask, render_template, url_for, request, redirect
+from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 
+# Initialize Flask app
 app = Flask(__name__)
+app.secret_key = "Cairocoders-Ednalan"
 
-# Database configuration (adjust connection string if needed)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///credisync.db'
+# Configure database connection (adjust connection string if needed)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:@localhost/testingdb'
+
+# Initialize SQLAlchemy
 db = SQLAlchemy(app)
 
-#loan application model (save in this table???)
-class LoanApplication(db.Model):
+# Define your employee model using Flask-SQLAlchemy
+class Employee(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    applicant_id = db.Column(db.String(200), nullable=False)  # Consider using UUID for unique IDs
-    salary = db.Column(db.Integer, nullable=False)
-    loan_amount = db.Column(db.Integer, nullable=False)
-    status = db.Column(db.String(100), default="pending")  # Add status (pending, approved, rejected)
+    name = db.Column(db.String(80), nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    phone = db.Column(db.String(120), nullable=False)
 
     def __repr__(self):
-        return f"<LoanApplication {self.id} - {self.applicant_id}>"  # Improved representation
+        return f"<Employee {self.name}>"
 
 
-@app.route('/loan_application', methods=['GET', 'POST'])
-def loan_application():
+@app.route('/')
+def index():
+    # Retrieve all employees from the database
+    employees = Employee.query.all()
+
+    return render_template('index.html', employees=employees)
+
+
+@app.route('/add_employee', methods=['POST'])
+def add_employee():
     if request.method == 'POST':
-        # Extract data from the form
-        applicant_id = request.form['applicant_id']
-        salary = int(request.form['salary'])
-        loan_amount = int(request.form['loan_amount'])
+        name = request.form['fullname']
+        email = request.form['email']
+        phone = request.form['phone']
 
-        # Create a new loan application
-        new_application = LoanApplication(applicant_id=applicant_id, salary=salary, loan_amount=loan_amount)
+        # Create a new employee object
+        new_employee = Employee(name=name, email=email, phone=phone)
 
-        # Add the application to the database and commit changes
-        db.session.add(new_application)
+        # Add the employee to the database and commit changes
+        db.session.add(new_employee)
         db.session.commit()
 
         # Flash message for successful creation (optional)
-        # flash('Loan application submitted successfully!')
+        flash('Employee Added successfully!')
 
-        return redirect(url_for('loan_applications'))  # Redirect to applications list
-    else:
-        # Render the loan application form
-        return render_template('loan_application.html')
+        return redirect(url_for('index'))
 
 
-@app.route('/loan_applications')
-def loan_applications():
-    # Retrieve all loan applications from the database
-    applications = LoanApplication.query.all()
+@app.route('/edit/<int:id>', methods=['GET', 'POST'])
+def edit_employee(id):
+    # Get the employee by ID
+    employee = Employee.query.get(id)
 
-    return render_template('loan_applications.html', applications=applications)
+    if employee is None:
+        flash('Employee not found!')
+        return redirect(url_for('index'))
 
+    if request.method == 'POST':
+        name = request.form['fullname']
+        email = request.form['email']
+        phone = request.form['phone']
 
-@app.route('/loan_application/<int:application_id>/approve')
-def approve_application(application_id):
-    # Get the application by ID
-    application = LoanApplication.query.get(application_id)
+        employee.name = name
+        employee.email = email
+        employee.phone = phone
 
-    if application:
-        application.status = "approved"
+        # Update the employee in the database and commit changes
         db.session.commit()
 
-        # Flash message for approval (optional)
-        # flash('Loan application approved successfully!')
+        flash('Employee Updated successfully!')
 
-        return redirect(url_for('loan_applications'))
-    else:
-        # Handle case where application ID is not found
-        return f"Loan application with ID {application_id} not found."
+        return redirect(url_for('index'))
+
+    return render_template('edit.html', employee=employee)
 
 
-@app.route('/loan_application/<int:application_id>/reject')
-def reject_application(application_id):
-    # Get the application by ID
-    application = LoanApplication.query.get(application_id)
+@app.route('/delete/<int:id>', methods=['GET', 'POST'])
+def delete_employee(id):
+    # Get the employee by ID
+    employee = Employee.query.get(id)
 
-    if application:
-        application.status = "rejected"
+    if employee is None:
+        flash('Employee not found!')
+        return redirect(url_for('index'))
+
+    if request.method == 'POST':
+        # Delete the employee from the database and commit changes
+        db.session.delete(employee)
         db.session.commit()
 
-        # Flash message for rejection (optional)
-        # flash('Loan application rejected successfully!')
+        flash('Employee Removed successfully!')
 
-        return redirect(url_for('loan_applications'))
-    else:
-        # Handle case where application ID is not found
-        return f"Loan application with ID {application_id} not found."
+        return redirect(url_for('index'))
+
+    return render_template('delete.html', employee=employee)  # Consider confirmation template
 
 
-# Consider adding a route for deleting applications with proper confirmation handling
+# Create database tables if they don't exist (optional)
+@app.before_first_request
+def create_tables():
+    db.create_all()
+
 
 if __name__ == "__main__":
-    db.create_all()  # Create database tables if they don't exist
     app.run(debug=True)
