@@ -7,6 +7,7 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///credisync.db'
 db = SQLAlchemy(app)
 
+#loan application model (save in this table???)
 class LoanApplication(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     applicant_id = db.Column(db.String(200), nullable=False)  # Consider using UUID for unique IDs
