@@ -1,0 +1,55 @@
+{% extends 'base.html' %} 
+
+<!--headblock-->
+{% block head %} 
+    <!--<h1>Credisync header</h1>-->
+{% endblock %}
+
+ <!--body block-->
+{% block body %}
+     <!--<h1>Credisync body</h1>-->
+     <div class="content">
+        <h1>Loan Applications</h1>
+    
+        <form action="" method="POST">
+          <label for="id">ID:</label>
+          <input type="text" id="id" name="id" required><br>
+    
+          <label for="salary">Salary:</label>
+          <input type="number" id="salary" name="salary" min="0" required><br>
+    
+          <label for="loan-amount">Loan Amount:</label>
+          <input type="number" id="loan-amount" name="loan-amount" min="0" required><br>
+    
+          <button type="submit">Apply</button>
+        </form>
+    
+        <table>
+          <tr>
+            <th>ID</th>
+            <th>Salary</th>
+            <th>Loan Amount</th>
+            <th>Actions</th>
+          </tr>
+          <tbody>
+            {% for application in applications %}
+              <tr>
+                <td>{{ application.id }}</td>
+                <td>{{ application.salary }}</td>
+                <td>{{ application.loan_amount }}</td>
+                <td>
+                  <a href="{{ url_for('approve_application', application_id=application.id) }}">Approve</a>
+                  <a href="{{ url_for('reject_application', application_id=application.id) }}">Reject</a>
+                  <a href="{{ url_for('reject_application', application_id=application.id) }}">Evaluate</a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+{% endblock %}
+
+<!--footer block-->
+{% block footer %}
+    <!--<h1>Credisync footer</h1>-->
+{% endblock %} 
